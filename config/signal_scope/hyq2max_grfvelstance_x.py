@@ -17,7 +17,7 @@ addSignal('HYQ_GRF', msg.utime, msg.accel[2])
 addSignal('HYQ_GRF', msg.utime, msg.rotation_rate[2])
 
 addPlot()
-addSignal('POSE_DEBUG',msg.utime, msg.vel[0])
+addSignal('POSE_GROUND_TRUTH',msg.utime, msg.vel[0])
 addSignal('POSE_RAW_KIN',msg.utime,msg.vel[0])
 addSignal('POSE_BODY',msg.utime, msg.vel[0])
 

@@ -11,35 +11,35 @@ is used to record the attribute lookups that are required to
 extract the signal data from the lcm message in the future.
 '''
 
-addSignal('POSE_DEBUG', msg.utime, msg.pos[0])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.pos[0])
 addSignal('POSE_BODY', msg.utime, msg.pos[0])
 
-addSignal('POSE_DEBUG', msg.utime, msg.pos[1])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.pos[1])
 addSignal('POSE_BODY', msg.utime, msg.pos[1])
 
 
-addSignal('POSE_DEBUG', msg.utime, msg.pos[2])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.pos[2])
 addSignal('POSE_BODY', msg.utime, msg.pos[2])
 
 addPlot()
-addSignal('POSE_DEBUG', msg.utime, msg.vel[0])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.vel[0])
 addSignal('POSE_BODY', msg.utime, msg.vel[0])
 
-addSignal('POSE_DEBUG', msg.utime, msg.vel[1])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.vel[1])
 addSignal('POSE_BODY', msg.utime, msg.vel[1])
 
 
-addSignal('POSE_DEBUG', msg.utime, msg.vel[2])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.vel[2])
 addSignal('POSE_BODY', msg.utime, msg.vel[2])
 
 addPlot()
-addSignal('POSE_DEBUG', msg.utime, msg.accel[0])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.accel[0])
 addSignal('POSE_BODY', msg.utime, msg.accel[0])
 
-addSignal('POSE_DEBUG', msg.utime, msg.accel[1])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.accel[1])
 addSignal('POSE_BODY', msg.utime, msg.accel[1])
 
 
-addSignal('POSE_DEBUG', msg.utime, msg.accel[2])
+addSignal('POSE_GROUND_TRUTH', msg.utime, msg.accel[2])
 addSignal('POSE_BODY', msg.utime, msg.accel[2])
 
