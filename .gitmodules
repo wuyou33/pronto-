@@ -10,3 +10,7 @@
 [submodule "ICPCUDA-pod"]
 	path = ICPCUDA-pod
 	url = https://github.com/ipab-slmc/ICPCUDA-pod.git
+[submodule "pronto"]
+	path = pronto
+	url = https://github.com/iit-DLSLab/pronto.git
+	branch = hyq-dev
