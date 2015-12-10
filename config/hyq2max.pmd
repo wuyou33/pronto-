@@ -45,7 +45,7 @@ cmd "ros2lcm" {
 
 script "00.gazebo" {
    #start cmd "ros2lcm";
-   start cmd "kin_estimator";
+   #start cmd "kin_estimator";
    start cmd "robot_model_pub";
    start cmd "bot-spy";
    start cmd "bot_param_server";
