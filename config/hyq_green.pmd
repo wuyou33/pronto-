@@ -1,0 +1,25 @@
+cmd "fusion" {
+    exec = "se-fusion";
+    host = "localhost";
+}
+
+cmd "bot-spy" {
+    exec = "bot-spy";
+    host = "localhost";
+}
+
+cmd "signal-scope" {
+    exec = "signal-scope";
+    host = "localhost";
+}
+
+cmd "sl-start" {
+   exec = "bash /home/mcamurri/git/dls/SL/SLCMake/hyq/launch.sh -c --hold xenort";
+   host = "localhost";
+}
+
+script "00.start" {
+   start cmd "sl-start";
+   start cmd "fusion";
+}
+

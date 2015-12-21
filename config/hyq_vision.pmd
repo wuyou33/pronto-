@@ -1,0 +1,79 @@
+group "lidar" {
+    cmd "hokuyo" {
+       exec = "hokuyo";
+       host = "localhost";
+    }
+
+    cmd "lidar-odo" {
+       exec = "se-lidar-odometry  -o POSE_BODY_SCANMATCHER";
+       host = "localhost";
+    }
+}
+
+cmd "bot-spy" {
+    exec = "bot-spy";
+    host = "localhost";
+}
+
+group "ptu" {
+    cmd "ptu-down" {
+        exec = "echo "TP-850" > /dev/ttyS0";
+        host = "localhost";
+    }
+    cmd "ptu-driver" {
+        exec = "roslaunch flir_ptu_driver ptu.launch";
+        host = "localhost";
+    }
+}
+
+cmd "bumblebee" {
+    exec = "roslaunch camera1394stereo stereo_camera.launch";
+    host = "localhost";
+}
+
+group "ros" {
+    cmd "roscore" {
+        exec = "roscore";
+        host = "localhost";
+    }
+    cmd "ros2lcm" {
+        exec = "rosrun pronto_translators ros2lcm_hyq ";
+        host = "localhost";
+    }
+    cmd "ros2lcm_velodyne" {
+        exec = "rosrun pronto_translators ros2lcm_velodyne";
+        host = "localhost";
+    }
+}
+
+cmd "signal-scope" {
+    exec = "signal-scope";
+    host = "localhost";
+}
+
+cmd "rosbag" {
+    exec = "rosbag record";
+    host = "localhost;
+}
+
+script "00.start" {
+    start cmd "ptu-down";
+    wait ms 1000;
+    start group "ros";
+    start cmd "ptu-driver";
+    start cmd "hokuyo";
+    wait ms 500;
+    start cmd "lidar-odo";
+    start cmd "bumblebee";
+}
+
+script "01.record" {
+   start "rosbag";
+}
+
+script "02.stop {
+   stop "rosbag";
+}
+
+
+
