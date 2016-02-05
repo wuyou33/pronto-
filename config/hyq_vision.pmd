@@ -1,13 +1,75 @@
-group "lidar" {
-    cmd "hokuyo" {
-       exec = "hokuyo";
-       host = "localhost";
-    }
+group "head-marker-calibration"{
 
-    cmd "lidar-odo" {
-       exec = "se-lidar-odometry  -o POSE_BODY_SCANMATCHER";
-       host = "localhost";
+cmd "head-calibration" {
+    exec = "$HOME/vision_ros_nodes/head_calibration/build/head_calibration debug true";
+    host = "localhost";
+}
+
+cmd "marker-calibration" {
+    exec = "$HOME/vision_ros_nodes/head_calibration/build/shmem_server_marker $HOME/vision_ros_nodes/head_calibration/config/";
+    host = "localhost";
+}
+}
+
+cmd "vicon-bridge" {
+    exec = "roslaunch vicon_bridge vicon.launch";
+    host = "localhost";
+}
+
+cmd "param-server" {
+    exec = "bot-param-server $PRONTO_ROOT/config/hyq_real.cfg";
+    host = "localhost";
+}
+
+cmd "lcm2ros-translator" {
+    exec = "rosrun hyq_slam hokuyo_republisher";
+    host = "localhost";
+}
+
+cmd "state-publisher" {
+    exec = "rosrun robot_state_publisher robot_state_publisher";
+    host = "localhost";
+}
+
+group "ros2lcm-translator" {
+    cmd "ros2lcm" {
+         exec = "rosrun pronto_translators ros2lcm_hyq";
+         host = "localhost";
     }
+    cmd "ros2lcm-velodyne"{
+        exec = "rosrun pronto_translators ros2lcm_velodyne";
+        host = "localhost";
+    }
+}
+
+cmd "ptu-driver" {
+    exec = "roslaunch flir_ptu_driver ptu.launch port:=/dev/ttyS0";
+    host = "localhost";
+}
+
+cmd "hokuyo-driver" {
+    exec = "$HOME/git/hokuyo/build/bin/hokuyo -c SCAN";
+    host = "localhost";
+}
+
+cmd "velodyne-driver" {
+    exec = "roslaunch velodyne_pointcloud 32e_points.launch calibration:=/home/hyq/vision_ros_nodes/32db.yaml";
+    host = "localhost";
+}
+
+cmd "bumblebee-driver" {
+    exec = "roslaunch camera1394stereo stereo_camera.launch";
+    host = "localhost";
+}
+
+cmd "xtion-driver" {
+    exec = "roslaunch hyq_slam xtion.launch";
+    host = "localhost";
+}
+
+cmd "lidar-odo" {
+    exec = "se-lidar-odometry -g -o POSE_BODY_SCANMATCHER";
+    host = "localhost";
 }
 
 cmd "bot-spy" {
@@ -15,35 +77,17 @@ cmd "bot-spy" {
     host = "localhost";
 }
 
-group "ptu" {
-    cmd "ptu-down" {
-        exec = "echo "TP-850" > /dev/ttyS0";
-        host = "localhost";
-    }
-    cmd "ptu-driver" {
-        exec = "roslaunch flir_ptu_driver ptu.launch";
-        host = "localhost";
-    }
-}
-
-cmd "bumblebee" {
-    exec = "roslaunch camera1394stereo stereo_camera.launch";
-    host = "localhost";
-}
 
 group "ros" {
     cmd "roscore" {
         exec = "roscore";
         host = "localhost";
     }
-    cmd "ros2lcm" {
-        exec = "rosrun pronto_translators ros2lcm_hyq ";
-        host = "localhost";
-    }
-    cmd "ros2lcm_velodyne" {
-        exec = "rosrun pronto_translators ros2lcm_velodyne";
-        host = "localhost";
-    }
+}
+
+cmd "hyq-description" {
+   exec = "roslaunch hyq_description upload_hyq.launch";
+   host = "localhost";
 }
 
 cmd "signal-scope" {
@@ -53,27 +97,50 @@ cmd "signal-scope" {
 
 cmd "rosbag" {
     exec = "rosbag record";
-    host = "localhost;
+    host = "localhost";
+}
+
+cmd "local-mapping" {
+    exec = "rosrun hyq_slam local_mapper_node";
+    host = "localhost";
 }
 
 script "00.start" {
-    start cmd "ptu-down";
-    wait ms 1000;
     start group "ros";
+    wait ms 2000;
+    #start cmd "lcm2ros-translator";
+    #start group "ros2lcm-translator";
+    start cmd "param-server";
     start cmd "ptu-driver";
-    start cmd "hokuyo";
-    wait ms 500;
+    start cmd "hokuyo-driver";
+    start cmd "velodyne-driver";
+    start cmd "bumblebee-driver";
+    start cmd "xtion-driver";
     start cmd "lidar-odo";
-    start cmd "bumblebee";
+    wait ms 500;
+    start cmd "local-mapping";
 }
 
 script "01.record" {
-   start "rosbag";
+   start cmd "rosbag";
 }
 
-script "02.stop {
-   stop "rosbag";
+script "02.stop" {
+   stop cmd "rosbag";
 }
 
-
+script "03.head_calibration" {
+  start cmd "roscore";
+  wait ms 1500;
+  start cmd "hyq-description";
+  wait ms 2500;
+  start cmd "state-publisher";
+  wait ms 500;
+  start cmd "ptu-driver";
+  wait ms 1500;
+  start cmd "vicon-bridge";
+  wait ms 500;
+  start cmd "marker-calibration";
+  start cmd "head-calibration";
+}
 

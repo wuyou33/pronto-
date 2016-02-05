@@ -1,3 +1,8 @@
+cmd "bot_param_server" {
+    exec = "bot-param-server hyq_real.cfg";
+    host = "localhost";
+}
+
 cmd "fusion" {
     exec = "se-fusion -P hyq_real.cfg";
     host = "localhost";
@@ -19,6 +24,7 @@ cmd "sl-start" {
 }
 
 script "00.start" {
+   start cmd "bot_param_server";
    start cmd "sl-start";
    start cmd "fusion";
 }

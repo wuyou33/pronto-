@@ -17,13 +17,13 @@ addSignal('HYQ_GRF', msg.utime, msg.accel[2])
 addSignal('HYQ_GRF', msg.utime, msg.rotation_rate[2])
 
 addPlot()
-addSignal('POSE_VICON_WITHVEL',msg.utime, msg.vel[0])
-addSignal('POSE_RAW_KIN',msg.utime,msg.vel[0])
-addSignal('POSE_BODY',msg.utime, msg.vel[0])
-
-addPlot()
 addSignal('HYQ_STANCE_LEGS',msg.utime, msg.orientation[0])
 addSignal('HYQ_STANCE_LEGS',msg.utime, msg.orientation[1])
 addSignal('HYQ_STANCE_LEGS',msg.utime, msg.orientation[2])
 addSignal('HYQ_STANCE_LEGS',msg.utime, msg.orientation[3])
+
+addPlot()
+addSignal('POSE_GROUND_TRUTH',msg.utime, msg.vel[0])
+addSignal('POSE_RAW_KIN',msg.utime,msg.vel[0])
+addSignal('POSE_BODY',msg.utime, msg.vel[0])
 
