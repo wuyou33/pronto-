@@ -1,3 +1,21 @@
+group "head-marker-calibration"{
+
+cmd "head-calibration" {
+    exec = "$HOME/vision_ros_nodes/head_calibration/build/head_calibration debug true";
+    host = "localhost";
+}
+
+cmd "marker-calibration" {
+    exec = "$HOME/vision_ros_nodes/head_calibration/build/shmem_server_marker $HOME/vision_ros_nodes/head_calibration/config/";
+    host = "localhost";
+}
+}
+
+cmd "vicon-bridge" {
+    exec = "roslaunch vicon_bridge vicon.launch";
+    host = "localhost";
+}
+
 cmd "param-server" {
     exec = "bot-param-server $PRONTO_ROOT/config/hyq_real.cfg";
     host = "localhost";
@@ -5,6 +23,11 @@ cmd "param-server" {
 
 cmd "lcm2ros-translator" {
     exec = "rosrun hyq_slam hokuyo_republisher";
+    host = "localhost";
+}
+
+cmd "state-publisher" {
+    exec = "rosrun robot_state_publisher robot_state_publisher";
     host = "localhost";
 }
 
@@ -62,6 +85,11 @@ group "ros" {
     }
 }
 
+cmd "hyq-description" {
+   exec = "roslaunch hyq_description upload_hyq.launch";
+   host = "localhost";
+}
+
 cmd "signal-scope" {
     exec = "signal-scope";
     host = "localhost";
@@ -101,5 +129,18 @@ script "02.stop" {
    stop cmd "rosbag";
 }
 
-
+script "03.head_calibration" {
+  start cmd "roscore";
+  wait ms 1500;
+  start cmd "hyq-description";
+  wait ms 2500;
+  start cmd "state-publisher";
+  wait ms 500;
+  start cmd "ptu-driver";
+  wait ms 1500;
+  start cmd "vicon-bridge";
+  wait ms 500;
+  start cmd "marker-calibration";
+  start cmd "head-calibration";
+}
 
