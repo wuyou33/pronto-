@@ -33,18 +33,14 @@ group "hyq" {
        host = "localhost";
    }
    cmd "hyq_bot_param_server" {
-       exec = "bot-param-server hyq.cfg";
+       exec = "bot-param-server hyq_nogt.cfg";
        host = "localhost";
    }
    cmd "hyq_pronto_viewer" {
-       exec = "pronto-viewer -c hyq.cfg";
+       exec = "pronto-viewer -c hyq_nogt.cfg";
        host = "localhost";
    }
    cmd "hyq_se_fusion" {
-       exec = "se-fusion -P hyq.cfg";
-       host = "localhost";
-   }
-   cmd "hyq_se_fusion_nogt"{
        exec = "se-fusion -P hyq_nogt.cfg";
        host = "localhost";
    }
@@ -75,12 +71,6 @@ script "02.hyq_gazebo" {
    start cmd "hyq_bot_param_server";
    start cmd "hyq_se_fusion";
    start cmd "se_state_sync";
-   start cmd "signal-scope";
-}
-
-script "03.hyq_nogt" {
-   start cmd "bot-spy";
-   start cmd "hyq_se_fusion_nogt";
    start cmd "signal-scope";
 }
 

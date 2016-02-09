@@ -11,10 +11,10 @@ is used to record the attribute lookups that are required to
 extract the signal data from the lcm message in the future.
 '''
 
-addSignal('HYQ_GRF', msg.utime, msg.pos[2])
-addSignal('HYQ_GRF', msg.utime, msg.vel[2])
-addSignal('HYQ_GRF', msg.utime, msg.accel[2])
-addSignal('HYQ_GRF', msg.utime, msg.rotation_rate[2])
+addSignal('HYQ_GRF', msg.utime, msg.LF[2])
+addSignal('HYQ_GRF', msg.utime, msg.RF[2])
+addSignal('HYQ_GRF', msg.utime, msg.LH[2])
+addSignal('HYQ_GRF', msg.utime, msg.RH[2])
 
 addPlot()
 addSignal('HYQ_STANCE_LEGS',msg.utime, msg.orientation[0])
