@@ -4,7 +4,7 @@ cmd "bot_param_server" {
 }
 
 cmd "fusion" {
-    exec = "se-fusion";
+    exec = "se-fusion -P hyq_real.cfg";
     host = "localhost";
 }
 
