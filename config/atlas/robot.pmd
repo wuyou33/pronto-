@@ -1,0 +1,67 @@
+group "00.params_and_model_pub" {
+    cmd "pserver" {
+        exec = "bot-param-server $DRC_BASE/software/config/atlas/robot.cfg";
+        host = "localhost";
+    }
+
+    cmd "model_LR_RR" {
+        exec = "robot_model_publisher $DRC_BASE/software/models/atlas_v5/model_LR_RR.urdf";
+        host = "localhost";
+    }
+
+}
+
+group "01.state_mit" {
+
+    cmd "state-sync" {
+        exec = "se-state-sync-simple";
+        host = "localhost";
+    }
+    cmd "fusion" {
+        exec = "se-fusion";
+        host = "localhost";
+    }
+    cmd "yaw-lock" {
+        exec = "se-yaw-lock -yd";
+        host = "localhost";
+    }
+    cmd "republish-atlas-state" {
+        exec = "se-republish-atlas-state-as-core";
+        host = "localhost";
+    }
+}
+
+group "01.state_mit_from_logfile" {
+    cmd "fusion-fromfile" {
+        exec = "se-fusion  -L /home/mcamurri/datasets/lcmlogs/2015-04-30-16-53-45.lcmlog  -P drc_robot_from_logfile.cfg   -pr 0";
+        host = "localhost";
+    }
+}
+
+
+cmd "log_terrain" {
+    exec = "lcm-logplayer-gui /home/mcamurri/datasets/lcmlogs/2015-04-30-16-53-45.lcmlog -p";
+    host = "localhost";
+}
+
+cmd "viewer" {
+    exec = "pronto-viewer -c atlas/robot.cfg";
+    host = "localhost";
+}
+
+
+script "0.full" {
+    start group "00.params_and_model_pub";
+    wait ms 1000;
+    start group "01.state_mit";
+    start cmd "viewer";
+}
+
+script "1.from_logfile" {
+    start group "00.params_and_model_pub";
+    wait ms 1000;
+    start cmd "state-sync";
+    start group "01.state_mit_from_logfile";
+    start cmd "viewer";
+}
+
