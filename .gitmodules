@@ -41,3 +41,7 @@
 [submodule "externals/kinematics-utils"]
 	path = externals/kinematics-utils
 	url = https://github.com/ipab-slmc/kinematics-utils.git
+[submodule "dls-state-est"]
+	path = dls-state-est
+	url = git@github.com:ipab-slmc/sl-state-estimator.git
+	branch = pronto-integration
