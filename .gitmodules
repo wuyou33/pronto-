@@ -16,8 +16,9 @@
 	url = https://github.com/openhumanoids/octomap-pod.git
 [submodule "externals/common_utils"]
 	path = externals/common_utils
-	url = https://github.com/openhumanoids/common_utils.git
+	url = git@github.com:iit-DLSLab/common_utils.git
 	ignore = untracked
+        branch = hyq-dev
 [submodule "externals/occ-map"]
 	path = externals/occ-map
 	url = https://github.com/openhumanoids/occ-map.git
