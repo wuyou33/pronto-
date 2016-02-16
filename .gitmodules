@@ -1,6 +1,7 @@
 [submodule "pronto"]
-	path = pronto
-	url = https://github.com/openhumanoids/pronto.git
+        path = pronto
+        url = https://github.com/iit-DLSLab/pronto.git
+        branch = hyq-dev
 [submodule "externals/frsm"]
 	path = externals/frsm
 	url = https://github.com/openhumanoids/frsm
