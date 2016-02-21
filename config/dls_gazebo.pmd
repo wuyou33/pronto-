@@ -3,6 +3,12 @@ cmd "signal-scope" {
     host = "localhost";
 }
 
+cmd "lcm-logger" {
+   exec = "lcm-logger";
+   host = "localhost";
+}
+
+
 cmd "bot-spy" {
     exec = "bot-spy";
     host = "localhost";
@@ -99,4 +105,6 @@ script "02.hyq_reset" {
    start cmd "hyq_bot_param_server";
    start cmd "hyq_se_fusion";
 }
-
+script "03.logger" {
+  start cmd "lcm-logger";
+}
