@@ -11,14 +11,19 @@ is used to record the attribute lookups that are required to
 extract the signal data from the lcm message in the future.
 '''
 
-addSignal('POSE_VICON_WITHVEL', msg.utime, msg.pos[0])
-addSignal('POSE_BODY', msg.utime, msg.pos[0])
+addSignal('HYQ_GRF', msg.utime, msg.LF[2])
+addSignal('HYQ_GRF', msg.utime, msg.RF[2])
+addSignal('HYQ_GRF', msg.utime, msg.LH[2])
+addSignal('HYQ_GRF', msg.utime, msg.RH[2])
 
 addPlot()
-addSignal('POSE_VICON_WITHVEL', msg.utime, msg.pos[1])
-addSignal('POSE_BODY', msg.utime, msg.pos[1])
-
+addSignal('PCONTACT',msg.utime, msg.LF[0])
+addSignal('PCONTACT',msg.utime, msg.RF[0])
+addSignal('PCONTACT',msg.utime, msg.LH[0])
+addSignal('PCONTACT',msg.utime, msg.RH[0])
 
 addPlot()
-addSignal('POSE_VICON_WITHVEL', msg.utime, msg.pos[2])
-addSignal('POSE_BODY', msg.utime, msg.pos[2])
+addSignal('POSE_GROUND_TRUTH',msg.utime,msg.vel[0])
+addSignal('POSE_RAW_KIN',msg.utime,msg.vel[0])
+addSignal('POSE_BODY',msg.utime,msg.vel[0])
+
