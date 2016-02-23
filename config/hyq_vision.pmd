@@ -68,7 +68,7 @@ cmd "xtion-driver" {
 }
 
 cmd "lidar-odo" {
-    exec = "se-lidar-odometry -g -o POSE_BODY_SCANMATCHER";
+    exec = "se-lidar-odometry -g -o SCAN_MATCHER";
     host = "localhost";
 }
 
@@ -96,7 +96,23 @@ cmd "signal-scope" {
 }
 
 cmd "rosbag" {
-    exec = "rosbag record";
+    exec = "rosbag record rosbag record -o $1 -b 100000 \
+/joint_states \
+/rosout \
+/rosout_agg \
+/tf \
+/asus/depth/points \
+/asus/depth/image_rect \
+/asus/depth/camera_info \
+/bumblebee2/left/camera_info \
+/bumblebee2/left/image_raw \
+/bumblebee2/right/camera_info \
+/bumblebee2/right/image_raw \
+/vicon/hyq_green/body \
+/imu/imu \
+/velodyne_points \
+/velodyne_packets  \
+/scan";
     host = "localhost";
 }
 
@@ -116,9 +132,9 @@ script "00.start" {
     start cmd "velodyne-driver";
     start cmd "bumblebee-driver";
     start cmd "xtion-driver";
-    start cmd "lidar-odo";
-    wait ms 500;
-    start cmd "local-mapping";
+    #start cmd "lidar-odo";
+    #wait ms 500;
+    #start cmd "local-mapping";
 }
 
 script "01.record" {
