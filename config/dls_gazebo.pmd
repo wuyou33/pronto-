@@ -54,6 +54,10 @@ group "hyq" {
        exec = "se-fusion -P hyq.cfg";
        host = "localhost";
    }
+   cmd "hyq_se_fusion_oldlog" {
+       exec = "se-fusion -P hyq.cfg -O state_estimator.hyq_kse.ground_truth_channel=POSE_VICON|state_estimator.vicon.channel=VICON_TO_LOCAL|state_estimator.ins.timestep_dt=0.01";
+      host = "localhost";
+   }
    cmd "hyq_se_fusion_nogt"{
        exec = "se-fusion -P hyq_nogt.cfg";
        host = "localhost";

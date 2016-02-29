@@ -11,6 +11,12 @@ cmd "marker-calibration" {
 }
 }
 
+cmd "imu-lcm-driver" {
+    exec = "microstrain --dev /dev/ttyACM0 --rate m";
+    host = "hyq-green";
+}
+
+
 cmd "vicon-bridge" {
     exec = "roslaunch vicon_bridge vicon.launch";
     host = "localhost";
