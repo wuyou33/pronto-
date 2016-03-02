@@ -3,6 +3,7 @@
 
 externals
 pronto
+dls-state-estimator
 
 # The following is optional but in the build after pronto:
 # signal-scope is a tool for plotting (LCM) signals
