@@ -1,6 +1,3 @@
-[submodule "pronto"]
-	path = pronto
-	url = https://github.com/openhumanoids/pronto.git
 [submodule "externals/frsm"]
 	path = externals/frsm
 	url = https://github.com/openhumanoids/frsm
