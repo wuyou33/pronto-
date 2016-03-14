@@ -38,3 +38,6 @@
 [submodule "externals/kinematics-utils"]
 	path = externals/kinematics-utils
 	url = https://github.com/ipab-slmc/kinematics-utils.git
+[submodule "pronto"]
+	path = pronto
+	url = git@github.com:iit-DLSLab/pronto.git
