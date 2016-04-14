@@ -15,6 +15,7 @@
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/JointState.h>
+#include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Wrench.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -26,21 +27,25 @@
 
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
-#include "lcmtypes/pronto/atlas_behavior_t.hpp"
-#include "lcmtypes/pronto/force_torque_t.hpp"
-#include "lcmtypes/pronto/atlas_state_t.hpp"
-#include "lcmtypes/pronto/robot_state_t.hpp"
-#include "lcmtypes/pronto/joint_state_t.hpp"
-#include "lcmtypes/pronto/utime_t.hpp"
-#include "lcmtypes/pronto/atlas_raw_imu_batch_t.hpp"
-#include "lcmtypes/mav/ins_t.hpp"
+#include <ViconDerivator.hpp>
+//#include "lcmtypes/pronto/force_torque_t.hpp"
+//#include "lcmtypes/pronto/atlas_state_t.hpp"
+//#include "lcmtypes/pronto/robot_state_t.hpp"
+//#include "lcmtypes/pronto/joint_state_t.hpp"
+//#include "lcmtypes/pronto/utime_t.hpp"
+//#include "lcmtypes/pronto/atlas_raw_imu_batch_t.hpp"
+//#include "lcmtypes/mav/ins_t.hpp"
 
 using namespace std;
 
 class App{
 public:
-  App(ros::NodeHandle node_, bool send_ground_truth_);
+  App(ros::NodeHandle& node,
+      bool send_ground_truth_,
+      bool send_pose_body = false);
   ~App();
+
+  void pose_bdi_cb(const nav_msgs::OdometryConstPtr& msg);
 
 private:
     Eigen::Affine3d bTf; // Transform between viconplate-to-body
@@ -60,12 +65,13 @@ private:
     ros::Subscriber pose_vicon_sub_;
     ros::Subscriber pose_sim_ground_truth;
     void pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg);
+    void pose_vicon_alt_cb(const geometry_msgs::TransformStampedConstPtr& msg);
 
     ros::Subscriber imuSensorSub_;
     void imuSensorCallback(const sensor_msgs::ImuConstPtr& msg);
 
     ros::Subscriber laserScanSub_;
-    void laserScanCallback(const sensor_msgs::LaserScanConstPtr& msg);
+    //void laserScanCallback(const sensor_msgs::LaserScanConstPtr& msg);
 
     void simGroundTruthCallback(const nav_msgs::OdometryConstPtr& msg);
 
@@ -73,12 +79,14 @@ private:
 
     int64_t last_joint_state_utime_;
     bool verbose_;
-    mav::ins_t imu;
+    bot_core::ins_t imu;
     bot_core::pose_t pose_ground_truth;
     bot_core::rigid_transform_t transf_ground_truth;
 
     tf::TransformListener listener_;
     ViconDerivator* vd_;
+    std::string vicon_frame = "vicon/hyq_green/body";
+    lcm::LCM lcm_publish_;
 };
 
 App::App(ros::NodeHandle& node,
@@ -118,17 +126,17 @@ App::App(ros::NodeHandle& node,
     pose_vicon_sub_ = node_.subscribe("/hyq2max/ground_truth_odom", 100, &App::simGroundTruthCallback, this);
     imuSensorSub_ = node_.subscribe("/imu/imu", 100, &App::imuSensorCallback, this);
 
-    laserScanSub_ = node_.subscribe("scan", 100, &App::laserScanCallback, this);
+    //laserScanSub_ = node_.subscribe("scan", 100, &App::laserScanCallback, this);
 
     verbose_ = false;
     ROS_INFO("ros2lcm Translator ready");
 }
 
-  joint_states_sub_ = node_.subscribe(string("joint_states"), 100, &App::joint_states_cb,this);
-  ptu_name_ = {"ptu_pan", "ptu_tilt"};
-  ptu_position_ = {0.0,0.0};
-  ptu_velocity_ = {0.0,0.0};
-  ptu_effort_ = {0.0,0.0};
+  //joint_states_sub_ = node_.subscribe(string("joint_states"), 100, &App::joint_states_cb,this);
+  //ptu_name_ = {"ptu_pan", "ptu_tilt"};
+  //ptu_position_ = {0.0,0.0};
+  //ptu_velocity_ = {0.0,0.0};
+  //ptu_effort_ = {0.0,0.0};
 
 void App::simGroundTruthCallback(const nav_msgs::OdometryConstPtr &msg) {
     pose_ground_truth.utime = msg->header.stamp.toNSec() / 1000;
@@ -180,9 +188,6 @@ void App::simGroundTruthCallback(const nav_msgs::OdometryConstPtr &msg) {
     lcmPublish_.publish("ODOM_GROUND_TRUTH", &transf_ground_truth);
 }
 
-
-  verbose_ = false;
-};
 
 void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
     Eigen::Vector3d pos;
@@ -314,7 +319,7 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
 
 
 
-  pronto::joint_state_t msg_out;
+  bot_core::joint_state_t msg_out;
   msg_out.utime = (int64_t) msg->header.stamp.toNSec()/1000; // from nsec to usec  
   msg_out.joint_position.assign(n_joints , std::numeric_limits<int>::min()  );
   msg_out.joint_velocity.assign(n_joints , std::numeric_limits<int>::min()  );
@@ -336,7 +341,7 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
 
 
   if (1==0){ 
-  pronto::robot_state_t msg_out;
+  bot_core::robot_state_t msg_out;
   msg_out.utime = (int64_t) msg->header.stamp.toNSec()/1000; // from nsec to usec  
   msg_out.joint_position.assign(n_joints , std::numeric_limits<int>::min()  );
   msg_out.joint_velocity.assign(n_joints , std::numeric_limits<int>::min()  );
@@ -361,7 +366,8 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
 }
 
 
-int gt_counter =0;
+int gt_counter = 0;
+
 void App::pose_bdi_cb(const nav_msgs::OdometryConstPtr& msg){
   if (gt_counter%1000 ==0){
     ROS_ERROR("BDI  [%d]", gt_counter );
@@ -413,7 +419,7 @@ void App::pose_bdi_cb(const nav_msgs::OdometryConstPtr& msg){
 }
 
 
-void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
+void App::pose_vicon_alt_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
 
   Eigen::Matrix4d bTf;
   bTf <<        0.00000,   0.00000,  1.00000,  -0.26100,
@@ -475,9 +481,9 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
 
 
 
-void App::imuSensorCallback(const sensor_msgs::ImuConstPtr& msg){
+void App::imuSensorCallback(const sensor_msgs::ImuConstPtr& msg) {
 
-  mav::ins_t imu;
+  bot_core::ins_t imu;
   imu.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
   imu.device_time = imu.utime;
   imu.gyro[0] = msg->angular_velocity.x;
