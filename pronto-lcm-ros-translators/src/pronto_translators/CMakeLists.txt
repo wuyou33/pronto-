@@ -12,7 +12,7 @@ project(pronto_translators)
 ## is used, also find other catkin packages
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(yaml-cpp REQUIRED yaml-cpp)
+pkg_check_modules(YAMLCPP yaml-cpp=0.3.0)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -208,5 +208,9 @@ target_link_libraries(ros2lcm_hyq ${catkin_LIBRARIES})
 pods_use_pkg_config_packages(ros2lcm_hyq lcm bot2-core eigen3)
 
 add_executable(ros2lcm_velodyne src/ros2lcm_velodyne.cpp src/rawdata.cc src/calibration.cc)
-target_link_libraries(ros2lcm_velodyne ${catkin_LIBRARIES} ${PCL_COMMON_LIBRARIES} ${PCL_FILTERS_LIBRARIES} yaml-cpp)
+target_link_libraries(ros2lcm_velodyne
+                      ${catkin_LIBRARIES}
+                      ${PCL_COMMON_LIBRARIES}
+                      ${PCL_FILTERS_LIBRARIES}
+                      ${YAMLCPP_LIBRARIES})
 pods_use_pkg_config_packages(ros2lcm_velodyne lcm bot2-core eigen3)
