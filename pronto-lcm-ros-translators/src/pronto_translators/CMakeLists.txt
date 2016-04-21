@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-# needed for string arrays
+# needed for string arrays and std shared pointers
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declarations")
 
 include(cmake/pods.cmake)
