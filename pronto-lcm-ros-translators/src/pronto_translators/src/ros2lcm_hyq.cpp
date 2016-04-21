@@ -25,14 +25,6 @@
 
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
-#include "lcmtypes/pronto/atlas_behavior_t.hpp"
-#include "lcmtypes/pronto/force_torque_t.hpp"
-#include "lcmtypes/pronto/atlas_state_t.hpp"
-#include "lcmtypes/pronto/robot_state_t.hpp"
-#include "lcmtypes/pronto/joint_state_t.hpp"
-#include "lcmtypes/pronto/utime_t.hpp"
-#include "lcmtypes/pronto/atlas_raw_imu_batch_t.hpp"
-#include "lcmtypes/mav/ins_t.hpp"
 
 using namespace std;
 
@@ -215,7 +207,7 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
 
 
 
-  pronto::joint_state_t msg_out;
+  bot_core::joint_state_t msg_out;
   msg_out.utime = (int64_t) msg->header.stamp.toNSec()/1000; // from nsec to usec  
   msg_out.joint_position.assign(n_joints , std::numeric_limits<int>::min()  );
   msg_out.joint_velocity.assign(n_joints , std::numeric_limits<int>::min()  );
@@ -237,7 +229,7 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
 
 
   if (1==0){ 
-  pronto::robot_state_t msg_out;
+  bot_core::robot_state_t msg_out;
   msg_out.utime = (int64_t) msg->header.stamp.toNSec()/1000; // from nsec to usec  
   msg_out.joint_position.assign(n_joints , std::numeric_limits<int>::min()  );
   msg_out.joint_velocity.assign(n_joints , std::numeric_limits<int>::min()  );
