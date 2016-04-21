@@ -191,11 +191,7 @@ namespace velodyne_pointcloud
     try {
       YAML::Node doc;
       YAML::Parser parser(fin);
-
       parser.GetNextDocument(doc);
-
-      //YAML::LoadFile(calibration_file);
-
       doc >> *this;
     } catch (YAML::Exception &e) {
       std::cerr << "YAML Exception: " << e.what() << std::endl;

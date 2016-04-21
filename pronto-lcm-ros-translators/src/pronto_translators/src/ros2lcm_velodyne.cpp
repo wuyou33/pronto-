@@ -1,31 +1,22 @@
-// ros2lcm translator for point clouds
-// mfallon
+// ros2lcm translator for velodyne
+// mcamurri
 
-#include <boost/thread.hpp>
-#include <boost/shared_ptr.hpp>
-#include <fstream>
-#include <velodyne_msgs/VelodyneScan.h>
-#include <rawdata.h>
-#include <ros/ros.h>
-#include <ros/console.h>
-#include <cstdlib>
-#include <sys/time.h>
-#include <time.h>
 #include <iostream>
-#include <map>
-#include <lcm/lcm-cpp.hpp>
-#include <Eigen/Dense>
-#include <deque>
+
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/random_sample.h>
+
+#include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <a.out.h>
 #include <sensor_msgs/PointField.h>
+#include <velodyne_msgs/VelodyneScan.h>
 
 #include <velodyne_pointcloud/VelodyneConfigConfig.h>
-#include <lcmtypes/bot_core/pointcloud2_t.hpp>
-#include <lcmtypes/bot_core/pointcloud_t.hpp>
+#include <rawdata.h>
+
+#include <lcm/lcm-cpp.hpp>
+#include <lcmtypes/bot_core.hpp>
 
 class App {
 public:
@@ -43,7 +34,6 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud_1;
     pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud_2;
 
-
     ros::Subscriber velodyne_pointcloud_sub_;
     ros::Subscriber velodyne_scan_sub_;
 
@@ -52,14 +42,10 @@ private:
     float distance_;
     std::string velodyne_topic_;
 
-
     void velodyne_pointcloud_cb(const sensor_msgs::PointCloud2ConstPtr& msg);
     void velodyne_scan_cb(const velodyne_msgs::VelodyneScanConstPtr& msg);
 
-    boost::shared_ptr<velodyne_rawdata::RawData> data_;
-
-
-
+    std::shared_ptr<velodyne_rawdata::RawData> data_;
 };
 
 App::App(ros::NodeHandle &node_,
@@ -202,7 +188,6 @@ void App::velodyne_scan_cb(const velodyne_msgs::VelodyneScanConstPtr &msg) {
                                modulo_,
                                distance_,
                                pkn);
-
     }
 
     packet_.height = 1;

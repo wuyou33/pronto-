@@ -30,7 +30,7 @@
 #include <pcl_ros/point_cloud.h>
 #include <velodyne_msgs/VelodyneScan.h>
 #include <velodyne_pointcloud/point_types.h>
-#include "calibration.h"
+#include <calibration.h>
 #include <lcmtypes/bot_core/pointcloud_t.hpp>
 
 namespace velodyne_rawdata {
