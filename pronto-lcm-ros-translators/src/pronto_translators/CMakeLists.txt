@@ -14,16 +14,10 @@ project(pronto_translators)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAMLCPP yaml-cpp=0.3.0)
 
-if(NOT ${YAMLCPP_FOUND})
-message(FATAL_ERROR "Youd don't have the right version of yaml-cpp. You need 0.3.0. CMake will exit.")
-endif(NOT ${YAMLCPP_FOUND})
 include_directories(${YAMLCPP_INCLUDE_DIRS})
 link_directories(${YAMLCPP_LIBRARY_DIRS})
 
 pkg_check_modules(LCM lcm)
-
-
-
 
 find_package(PCL 1.7 REQUIRED COMPONENTS common filters)
 include_directories(${PCL_INCLUDE_DIRS})
@@ -212,6 +206,8 @@ add_executable(ros2lcm_hyq src/ros2lcm_hyq.cpp)
 target_link_libraries(ros2lcm_hyq ${catkin_LIBRARIES})
 pods_use_pkg_config_packages(ros2lcm_hyq ${LCM_LIBRARIES} bot2-core eigen3)
 
+# Compile only if we have the right version of YAML and PCL
+if(${YAMLCPP_FOUND} AND ${PCL_FOUND})
 add_executable(ros2lcm_velodyne src/ros2lcm_velodyne.cpp src/rawdata.cc src/calibration.cc)
 target_link_libraries(ros2lcm_velodyne ${YAMLCPP_LIBRARIES}
                                        ${catkin_LIBRARIES}
@@ -219,3 +215,4 @@ target_link_libraries(ros2lcm_velodyne ${YAMLCPP_LIBRARIES}
                                        ${PCL_FILTERS_LIBRARIES})
 
 pods_use_pkg_config_packages(ros2lcm_velodyne ${LCM_LIBRARIES} bot2-core eigen3) 
+endif(${YAMLCPP_FOUND} AND ${PCL_FOUND})
