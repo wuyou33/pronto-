@@ -29,8 +29,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   roslib
-#  atlas_hardware_interface
-)
+  atlas_hardware_interface
+  tf
+  tf_conversions)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -202,13 +203,16 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 #target_link_libraries(ros2lcm_thormang ${catkin_LIBRARIES})
 #pods_use_pkg_config_packages(ros2lcm_thormang lcm lcmtypes_pronto-lcmtypes bot2-core eigen3) 
 
-add_executable(ros2lcm_hyq src/ros2lcm_hyq.cpp)
+add_executable(ros2lcm_hyq src/ros2lcm_hyq.cpp src/ViconDerivator.cpp)
 target_link_libraries(ros2lcm_hyq ${catkin_LIBRARIES})
 pods_use_pkg_config_packages(ros2lcm_hyq ${LCM_LIBRARIES} bot2-core eigen3)
 
 # Compile only if we have the right version of YAML and PCL
 if(${YAMLCPP_FOUND} AND ${PCL_FOUND})
-add_executable(ros2lcm_velodyne src/ros2lcm_velodyne.cpp src/rawdata.cc src/calibration.cc)
+add_executable(ros2lcm_velodyne src/ros2lcm_velodyne.cpp
+                                src/rawdata.cc 
+                                src/calibration.cc)
+
 target_link_libraries(ros2lcm_velodyne ${YAMLCPP_LIBRARIES}
                                        ${catkin_LIBRARIES}
                                        ${PCL_COMMON_LIBRARIES}
