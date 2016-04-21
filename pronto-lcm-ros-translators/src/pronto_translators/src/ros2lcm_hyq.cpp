@@ -27,14 +27,6 @@
 
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
-#include <ViconDerivator.hpp>
-//#include "lcmtypes/pronto/force_torque_t.hpp"
-//#include "lcmtypes/pronto/atlas_state_t.hpp"
-//#include "lcmtypes/pronto/robot_state_t.hpp"
-//#include "lcmtypes/pronto/joint_state_t.hpp"
-//#include "lcmtypes/pronto/utime_t.hpp"
-//#include "lcmtypes/pronto/atlas_raw_imu_batch_t.hpp"
-//#include "lcmtypes/mav/ins_t.hpp"
 
 using namespace std;
 
