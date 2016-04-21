@@ -15,22 +15,27 @@
 
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/JointState.h>
+#include <sensor_msgs/LaserScan.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Wrench.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <std_msgs/Float64.h>
-#include <std_msgs/String.h>
-#include <std_msgs/Int32.h>
+#include <nav_msgs/Odometry.h>
+
+#include <tf/transform_listener.h>
+#include <tf_conversions/tf_eigen.h>
 
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/bot_core.hpp>
+#include <ViconDerivator.hpp>
 
 using namespace std;
 
 class App{
 public:
-  App(ros::NodeHandle node_, bool send_ground_truth_);
+  App(ros::NodeHandle& node,
+      bool send_ground_truth_,
+      bool send_pose_body = false);
   ~App();
 
 private:
@@ -73,7 +78,6 @@ private:
     ViconDerivator* vd_;
     std::string vicon_frame = "vicon/hyq_green/body";
     lcm::LCM lcm_publish_;
-      bot_core::ins_t imu;
 };
 
 App::App(ros::NodeHandle& node,
@@ -122,7 +126,6 @@ App::App(ros::NodeHandle& node,
 
 }
 
-  //joint_states_sub_ = node_.subscribe(string("joint_states"), 100, &App::joint_states_cb,this);
 
 void App::simGroundTruthCallback(const nav_msgs::OdometryConstPtr &msg) {
     pose_ground_truth.utime = msg->header.stamp.toNSec() / 1000;
@@ -154,37 +157,135 @@ void App::simGroundTruthCallback(const nav_msgs::OdometryConstPtr &msg) {
     pose_ground_truth.vel[1] = vel(1);
     pose_ground_truth.vel[2] = vel(2);
 
-  // The position and orientation from a vicon system:
-  ros::Subscriber pose_vicon_sub_;
-  void pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg);
+    pose_ground_truth.rotation_rate[0] = msg->twist.twist.angular.x;
+    pose_ground_truth.rotation_rate[1] = msg->twist.twist.angular.y;
+    pose_ground_truth.rotation_rate[2] = msg->twist.twist.angular.z;
 
-  ros::Subscriber imuSensorSub_;
-  void imuSensorCallback(const sensor_msgs::ImuConstPtr& msg);
+    lcmPublish_.publish("POSE_GROUND_TRUTH", &pose_ground_truth);
 
-  int64_t last_joint_state_utime_;
-  bool verbose_;
-};
+    transf_ground_truth.utime = pose_ground_truth.utime;
+    transf_ground_truth.trans[0] = msg->pose.pose.position.x;
+    transf_ground_truth.trans[1] = msg->pose.pose.position.y;
+    transf_ground_truth.trans[2] = msg->pose.pose.position.z;
 
-App::App(ros::NodeHandle node_, bool send_ground_truth_) :
-    send_ground_truth_(send_ground_truth_), node_(node_){
-  ROS_INFO("Initializing Translator");
-  if(!lcm_publish_.good()){
-    std::cerr <<"ERROR: lcm is not good()" <<std::endl;
-  }
+    transf_ground_truth.quat[0] = msg->pose.pose.orientation.w;
+    transf_ground_truth.quat[1] = msg->pose.pose.orientation.x;
+    transf_ground_truth.quat[2] = msg->pose.pose.orientation.y;
+    transf_ground_truth.quat[3] = msg->pose.pose.orientation.z;
 
-  joint_states_sub_ = node_.subscribe(string("joint_states"), 100, &App::joint_states_cb,this);
-  ptu_name_ = {"ptu_pan", "ptu_tilt"};
-  ptu_position_ = {0.0,0.0};
-  ptu_velocity_ = {0.0,0.0};
-  ptu_effort_ = {0.0,0.0};
 
-  pose_vicon_sub_ = node_.subscribe(string("vicon/hyq/body"), 100, &App::pose_vicon_cb,this);
-  imuSensorSub_ = node_.subscribe(string("Imu"), 100, &App::imuSensorCallback,this);
+    lcmPublish_.publish("ODOM_GROUND_TRUTH", &transf_ground_truth);
+}
 
-  verbose_ = false;
-};
 
-App::~App()  {
+void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
+    Eigen::Vector3d pos;
+    Eigen::Vector3d vicon_vel;
+    Eigen::Affine3d a = Eigen::Affine3d::Identity();
+
+
+    a.translation() << msg->transform.translation.x,
+                  msg->transform.translation.y,
+                  msg->transform.translation.z;
+
+    Eigen::Quaterniond a_q(msg->transform.rotation.w,
+                           msg->transform.rotation.x,
+                           msg->transform.rotation.y,
+                           msg->transform.rotation.z);
+    a.rotate(a_q);
+
+    if(first_vicon_transform) {
+        tf::StampedTransform transform;
+        try {
+            listener_.waitForTransform(vicon_frame,
+                                       "base_link",
+                                       ros::Time(0),
+                                       ros::Duration(10.0));
+
+            listener_.lookupTransform(vicon_frame,
+                                      "base_link",
+                                      ros::Time(0),
+                                      transform);
+
+            tf::transformTFToEigen(transform, bTf);
+            ROS_INFO("First Vicon-to-base transform captured:");
+            std::cout << bTf.matrix() << std::endl;
+            first_vicon_transform = false;
+            Eigen::Affine3d c = a * bTf;
+            pos << c.translation().x(), c.translation().y(), c.translation().z();
+
+            vd_->updateMA(msg->header.stamp.toSec(), pos, vicon_vel);
+            return;
+
+        } catch (tf::TransformException ex) {
+            std::cerr << "ERROR: vicon transform not received!" << std::endl;
+            std::cerr << ex.what() << std::endl;
+            return;
+        }
+    } else {
+        Eigen::Affine3d c = a * bTf;
+        bot_core::rigid_transform_t pose_msg;
+        pose_msg.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
+        pose_msg.trans[0] = msg->transform.translation.x;
+        pose_msg.trans[1] = msg->transform.translation.y;
+        pose_msg.trans[2] = msg->transform.translation.z;
+        pose_msg.quat[0] =  msg->transform.rotation.w;
+        pose_msg.quat[1] =  msg->transform.rotation.x;
+        pose_msg.quat[2] =  msg->transform.rotation.y;
+        pose_msg.quat[3] =  msg->transform.rotation.z;
+        lcmPublish_.publish("VICONSYSTEM_TO_LOCAL", &pose_msg);
+
+        bot_core::pose_t pose_msg3;
+
+        /* getting the estimated velocity */
+        pos << c.translation().x(), c.translation().y(), c.translation().z();
+        vd_->updateMA(msg->header.stamp.toSec(), pos, vicon_vel);
+
+        Eigen::Affine3d world_to_base = Eigen::Affine3d::Identity();
+        world_to_base.rotate(c.rotation());
+
+
+        // Velocity is expressed in the world frame.
+        //We rotate so its in base frame
+        vicon_vel = world_to_base.inverse() * vicon_vel;
+
+        pose_msg3.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
+        pose_msg3.pos[0] = c.translation().x();
+        pose_msg3.pos[1] = c.translation().y();
+        pose_msg3.pos[2] = c.translation().z();
+        pose_msg3.vel[0] = vicon_vel(0);
+        pose_msg3.vel[1] = vicon_vel(1);
+        pose_msg3.vel[2] = vicon_vel(2);
+        pose_msg3.accel[0] = 0;
+        pose_msg3.accel[1] = 0;
+        pose_msg3.accel[2] = 0;
+
+        Eigen::Quaterniond c_q = Eigen::Quaterniond(c.rotation());
+        pose_msg3.orientation[0] =  c_q.w();
+        pose_msg3.orientation[1] =  c_q.x();
+        pose_msg3.orientation[2] =  c_q.y();
+        pose_msg3.orientation[3] =  c_q.z();
+
+        pose_msg3.rotation_rate[0] = 0;
+        pose_msg3.rotation_rate[1] = 0;
+        pose_msg3.rotation_rate[2] = 0;
+
+        if(send_pose_body_) {
+            lcmPublish_.publish("POSE_BODY", &pose_msg3);
+        }
+        lcmPublish_.publish("POSE_VICON", &pose_msg3);
+
+        bot_core::rigid_transform_t pose_msg4;
+        pose_msg4.utime = (int64_t) floor(msg->header.stamp.toNSec() / 1000);
+        pose_msg4.trans[0] = c.translation().x();
+        pose_msg4.trans[1] = c.translation().y();
+        pose_msg4.trans[2] = c.translation().z();
+        pose_msg4.quat[0] =  c_q.w();
+        pose_msg4.quat[1] =  c_q.x();
+        pose_msg4.quat[2] =  c_q.y();
+        pose_msg4.quat[3] =  c_q.z();
+        lcmPublish_.publish("VICON_TO_LOCAL", &pose_msg4);
+    }
 }
 
 
@@ -254,59 +355,10 @@ void App::joint_states_cb(const sensor_msgs::JointStateConstPtr& msg){
 }
 
 
-int gt_counter =0;
-void App::pose_bdi_cb(const nav_msgs::OdometryConstPtr& msg){
-  if (gt_counter%1000 ==0){
-    ROS_ERROR("BDI  [%d]", gt_counter );
-  }  
-  gt_counter++;
-
-  bot_core::pose_t pose_msg;
-  pose_msg.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
-
-  if (verbose_)
-    std::cout <<"                                                            " << pose_msg.utime << " bdi\n";
-
-  pose_msg.pos[0] = msg->pose.pose.position.x;
-  pose_msg.pos[1] = msg->pose.pose.position.y;
-  pose_msg.pos[2] = msg->pose.pose.position.z;
-  // what about orientation in imu msg?
-  pose_msg.orientation[0] =  msg->pose.pose.orientation.w;
-  pose_msg.orientation[1] =  msg->pose.pose.orientation.x;
-  pose_msg.orientation[2] =  msg->pose.pose.orientation.y;
-  pose_msg.orientation[3] =  msg->pose.pose.orientation.z;
-
-  // This transformation is NOT correct for Trooper
-  // April 2014: added conversion to body frame - so that both rates are in body frame
-  Eigen::Matrix3d R = Eigen::Matrix3d( Eigen::Quaterniond( msg->pose.pose.orientation.w, msg->pose.pose.orientation.x,
-                                                           msg->pose.pose.orientation.y, msg->pose.pose.orientation.z ));
-  Eigen::Vector3d lin_body_vel  = R*Eigen::Vector3d ( msg->twist.twist.linear.x, msg->twist.twist.linear.y,
-                                                      msg->twist.twist.linear.z );
-  pose_msg.vel[0] = lin_body_vel[0];
-  pose_msg.vel[1] = lin_body_vel[1];
-  pose_msg.vel[2] = lin_body_vel[2];
+int gt_counter = 0;
 
 
-  // this is the body frame rate
-  pose_msg.rotation_rate[0] = msg->twist.twist.angular.x;
-  pose_msg.rotation_rate[1] = msg->twist.twist.angular.y;
-  pose_msg.rotation_rate[2] = msg->twist.twist.angular.z;
-  // prefer to take all the info from one source
-//  pose_msg.rotation_rate[0] = imu_msg_.angular_velocity.x;
-//  pose_msg.rotation_rate[1] = imu_msg_.angular_velocity.y;
-//  pose_msg.rotation_rate[2] = imu_msg_.angular_velocity.z;
-  
-  // Frame?
-  //pose_msg.accel[0] = imu_msg_.linear_acceleration.x;
-  //pose_msg.accel[1] = imu_msg_.linear_acceleration.y;
-  //pose_msg.accel[2] = imu_msg_.linear_acceleration.z;
-
-  lcm_publish_.publish("POSE_BDI", &pose_msg);   
-  // lcm_publish_.publish("POSE_BODY", &pose_msg);    // for now
-}
-
-
-void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
+void App::pose_vicon_alt_cb(const geometry_msgs::TransformStampedConstPtr& msg) {
 
   Eigen::Matrix4d bTf;
   bTf <<        0.00000,   0.00000,  1.00000,  -0.26100,
@@ -368,7 +420,7 @@ void App::pose_vicon_cb(const geometry_msgs::TransformStampedConstPtr& msg){
 
 
 
-void App::imuSensorCallback(const sensor_msgs::ImuConstPtr& msg){
+void App::imuSensorCallback(const sensor_msgs::ImuConstPtr& msg) {
 
   imu.utime = (int64_t) floor(msg->header.stamp.toNSec()/1000);
   imu.device_time = imu.utime;
