@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 # needed for string arrays
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declarations")
 
 include(cmake/pods.cmake)
 set(POD_NAME pronto_translators)
@@ -14,20 +14,29 @@ project(pronto_translators)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAMLCPP yaml-cpp=0.3.0)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  std_msgs
-  laser_geometry
-  tf
-  tf_conversions
-  roslib)
+if(NOT ${YAMLCPP_FOUND})
+message(FATAL_ERROR "Youd don't have the right version of yaml-cpp. You need 0.3.0. CMake will exit.")
+endif(NOT ${YAMLCPP_FOUND})
+include_directories(${YAMLCPP_INCLUDE_DIRS})
+link_directories(${YAMLCPP_LIBRARY_DIRS})
+
+pkg_check_modules(LCM lcm)
+
+
+
 
 find_package(PCL 1.7 REQUIRED COMPONENTS common filters)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  std_msgs
+  roslib
+#  atlas_hardware_interface
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -99,7 +108,7 @@ add_definitions(${PCL_DEFINITIONS})
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
+   INCLUDE_DIRS include
 #  LIBRARIES beginner_tutorials
   CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
@@ -111,10 +120,6 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
 
 ## Declare a cpp library
 # add_library(beginner_tutorials
@@ -187,30 +192,30 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 #add_executable(lcm2ros src/lcm2ros.cpp)
 #target_link_libraries(lcm2ros ${catkin_LIBRARIES})
-#pods_use_pkg_config_packages(lcm2ros lcm bot2-core)
-#
+#pods_use_pkg_config_packages(lcm2ros lcm lcmtypes_pronto-lcmtypes bot2-core)  
+
 #add_executable(ros2lcm src/ros2lcm.cpp)
 #target_link_libraries(ros2lcm ${catkin_LIBRARIES})
-#pods_use_pkg_config_packages(ros2lcm lcm bot2-core eigen3)
-#add_dependencies(ros2lcm trooper_mlc_msgs_generate_messages_cpp)
-#
-## this same translator is used by Edinburgh:
+#pods_use_pkg_config_packages(ros2lcm lcm lcmtypes_pronto-lcmtypes bot2-core eigen3) 
+#add_dependencies(ros2lcm trooper_mlc_msgs_generate_messages_cpp) 
+
+# this same translator is used by Edinburgh:
 #add_executable(ros2lcm_ihmc src/ros2lcm_ihmc.cpp)
 #target_link_libraries(ros2lcm_ihmc ${catkin_LIBRARIES})
-#pods_use_pkg_config_packages(ros2lcm_ihmc lcm bot2-core eigen3)
-#
+#pods_use_pkg_config_packages(ros2lcm_ihmc lcm lcmtypes_pronto-lcmtypes bot2-core eigen3)
+
 #add_executable(ros2lcm_thormang src/ros2lcm_thormang.cpp)
 #target_link_libraries(ros2lcm_thormang ${catkin_LIBRARIES})
-#pods_use_pkg_config_packages(ros2lcm_thormang lcm bot2-core eigen3)
+#pods_use_pkg_config_packages(ros2lcm_thormang lcm lcmtypes_pronto-lcmtypes bot2-core eigen3) 
 
-add_executable(ros2lcm_hyq src/ros2lcm_hyq.cpp src/ViconDerivator.cpp)
-target_link_libraries(ros2lcm_hyq ${catkin_LIBRARIES})
-pods_use_pkg_config_packages(ros2lcm_hyq lcm bot2-core eigen3)
+#add_executable(ros2lcm_hyq src/ros2lcm_hyq.cpp)
+#target_link_libraries(ros2lcm_hyq ${catkin_LIBRARIES})
+#pods_use_pkg_config_packages(ros2lcm_hyq lcm lcmtypes_pronto-lcmtypes bot2-core eigen3) 
 
 add_executable(ros2lcm_velodyne src/ros2lcm_velodyne.cpp src/rawdata.cc src/calibration.cc)
-target_link_libraries(ros2lcm_velodyne
-                      ${catkin_LIBRARIES}
-                      ${PCL_COMMON_LIBRARIES}
-                      ${PCL_FILTERS_LIBRARIES}
-                      ${YAMLCPP_LIBRARIES})
-pods_use_pkg_config_packages(ros2lcm_velodyne lcm bot2-core eigen3)
+target_link_libraries(ros2lcm_velodyne ${YAMLCPP_LIBRARIES}
+                                       ${catkin_LIBRARIES}
+                                       ${PCL_COMMON_LIBRARIES}
+                                       ${PCL_FILTERS_LIBRARIES})
+
+pods_use_pkg_config_packages(ros2lcm_velodyne ${LCM_LIBRARIES} bot2-core eigen3) 
