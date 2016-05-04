@@ -1,9 +1,6 @@
 [submodule "externals/frsm"]
 	path = externals/frsm
 	url = https://github.com/openhumanoids/frsm
-[submodule "signal-scope"]
-	path = signal-scope
-	url = https://github.com/openhumanoids/signal-scope
 [submodule "externals/microstrain"]
 	path = externals/microstrain
 	url = https://github.com/openhumanoids/microstrain.git
