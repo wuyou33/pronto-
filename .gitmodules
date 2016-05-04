@@ -46,3 +46,6 @@
 	path = externals/bot_core_lcmtypes
 	url = https://github.com/openhumanoids/bot_core_lcmtypes.git
 
+[submodule "signal-scope"]
+	path = signal-scope
+	url = git@github.com:iit-DLSLab/signal-scope.git
